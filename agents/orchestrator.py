@@ -9,7 +9,8 @@ from langchain_core.runnables import RunnablePassthrough
 load_dotenv()
 
 class MarketSenseOrchestrator:
-    def __init__(self, model_name="gpt-4-turbo-preview", temperature=0.2):
+    # Updated model_name to a currently supported OpenAI model
+    def __init__(self, model_name="gpt-5.6-luna", temperature=0.2):
         """Initializes the LLM and the agent prompts."""
         self.llm = ChatOpenAI(model=model_name, temperature=temperature)
         self.output_parser = StrOutputParser()
