@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from langchain_community.chat_models import ChatOllama
+from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
@@ -9,6 +9,7 @@ from langchain_core.runnables import RunnablePassthrough
 load_dotenv()
 
 class MarketSenseOrchestrator:
+    # Initializing with the local llama3 model
     def __init__(self, model_name="llama3", temperature=0.2):
         """Initializes the LLM and the agent prompts."""
         print(f"[INFO] Initializing local LLM: {model_name} via Ollama...")
