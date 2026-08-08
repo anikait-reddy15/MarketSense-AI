@@ -1,18 +1,18 @@
 import os
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
+from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
-# Load environment variables (e.g., OPENAI_API_KEY)
+# Load environment variables
 load_dotenv()
 
 class MarketSenseOrchestrator:
-    # Updated model_name to a currently supported OpenAI model
-    def __init__(self, model_name="gpt-5.6-luna", temperature=0.2):
+    def __init__(self, model_name="llama3", temperature=0.2):
         """Initializes the LLM and the agent prompts."""
-        self.llm = ChatOpenAI(model=model_name, temperature=temperature)
+        print(f"[INFO] Initializing local LLM: {model_name} via Ollama...")
+        self.llm = ChatOllama(model=model_name, temperature=temperature)
         self.output_parser = StrOutputParser()
         self.chain = self._build_pipeline()
 
@@ -68,7 +68,7 @@ class MarketSenseOrchestrator:
             return ""
 
 if __name__ == "__main__":
-    # Mock context that would normally come from your ChromaDB vector store
+    # Mock context that would normally come from your vector store
     mock_scraped_data = (
         "TikTok trend: Users are mixing ashwagandha with matcha for focus. "
         "Reddit skincare routines heavily feature Centella Asiatica for barrier repair. "
