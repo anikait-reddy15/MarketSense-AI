@@ -22,8 +22,10 @@ class MarketSenseOrchestrator:
         base_dir = os.path.dirname(os.path.dirname(__file__))
         vector_store_dir = os.path.join(base_dir, "data", "vector_store")
         
+        # FORCED CPU EXECUTION: Matches the ingestion pipeline setting
         self.embedding_function = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
+            model_name="sentence-transformers/all-MiniLM-L6-v2",
+            model_kwargs={'device': 'cpu'}
         )
         
         self.vector_store = Chroma(
@@ -62,8 +64,6 @@ class MarketSenseOrchestrator:
     def _build_pipeline(self):
         """Chains the RAG retrieval and agents together using LCEL."""
         
-        # Step 1: Retrieval Augmented Generation (RAG) & Trend Analysis
-        # The chain starts by passing the input query to the retriever
         analyze_trends = (
             {"context": self.retriever | self._format_docs} 
             | self._build_trend_analyzer_prompt() 
@@ -71,7 +71,6 @@ class MarketSenseOrchestrator:
             | self.output_parser
         )
 
-        # Step 2: Strategy Generation based on Step 1 output
         formulate_strategy = (
             {"trends": analyze_trends} 
             | self._build_strategist_prompt() 
@@ -87,7 +86,6 @@ class MarketSenseOrchestrator:
         print("[INFO] Retrieving relevant data from ChromaDB...")
         
         try:
-            # The pipeline now expects a string query instead of hard-coded context
             result = self.chain.invoke(query)
             print("[SUCCESS] Pipeline execution complete.")
             return result
@@ -97,9 +95,6 @@ class MarketSenseOrchestrator:
 
 if __name__ == "__main__":
     orchestrator = MarketSenseOrchestrator()
-    
-    # Instead of injecting mock data, we ask the orchestrator to research a topic.
-    # It will dynamically search ChromaDB, extract context, and formulate a strategy.
     target_market_query = "What are the latest consumer complaints and trends regarding sunscreen in India?"
     
     final_strategy = orchestrator.run(query=target_market_query)
