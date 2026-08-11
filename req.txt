@@ -1,20 +1,21 @@
 # UI Framework
 streamlit>=1.32.0
 
-# LLM & Agent Framework
-langchain>=0.1.13
-langchain-openai>=0.1.1
-langchain-community>=0.0.29
+# LLM & Agent Framework (Cloud / Groq)
+langchain>=0.2.0
+langchain-core>=0.2.0
+langchain-community>=0.2.0
+langchain-groq>=0.1.0
 
 # Data Ingestion & Web Scraping
-praw>=7.7.1
+ddgs>=9.14.0
 beautifulsoup4>=4.12.3
 requests>=2.31.0
 
-# Data Processing & Storage
-pandas>=2.2.1
+# Vector Storage & Embeddings (Local RAG)
 chromadb>=0.4.24
-tiktoken>=0.6.0
+langchain-chroma>=0.1.0
+langchain-huggingface>=0.0.1
 sentence-transformers>=2.5.1
 
 # Environment & Utilities
