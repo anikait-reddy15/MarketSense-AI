@@ -25,18 +25,13 @@ st.set_page_config(
 @st.cache_resource
 def manage_ollama_lifecycle():
     """Starts Ollama and preloads the model on startup, unloads them on exit."""
-    
-    # 1. Start the Ollama server in the background
     ollama_process = subprocess.Popen(
         ["ollama", "serve"], 
         stdout=subprocess.DEVNULL, 
         stderr=subprocess.DEVNULL
     )
-    
-    # Give the server 2 seconds to initialize
     time.sleep(2)
     
-    # 2. Preload Llama-3 into GPU memory (keep_alive: -1 keeps it loaded indefinitely)
     try:
         requests.post(
             "http://localhost:11434/api/generate", 
@@ -46,19 +41,15 @@ def manage_ollama_lifecycle():
     except Exception:
         pass
 
-    # Yield control back to Streamlit (The app runs normally here)
     yield ollama_process
 
-    # 3. TEARDOWN: Runs automatically when you press Ctrl+C to stop the dashboard
     print(f"\n[INFO] Dashboard stopping... Unloading {Config.LLM_MODEL_NAME} to free GPU memory.")
     try:
-        # Force unload the model from VRAM using the Ollama CLI
         subprocess.run(
             ["ollama", "stop", Config.LLM_MODEL_NAME], 
             stdout=subprocess.DEVNULL, 
             stderr=subprocess.DEVNULL
         )
-        # Fallback API call to drop memory
         requests.post(
             "http://localhost:11434/api/generate", 
             json={"model": Config.LLM_MODEL_NAME, "keep_alive": 0},
@@ -67,23 +58,18 @@ def manage_ollama_lifecycle():
     except Exception:
         pass
         
-    # 4. Terminate the background Ollama server
     print("[INFO] Shutting down Ollama background server.")
     ollama_process.terminate()
 
 def initialize_system():
     """Initializes the background processes and orchestrator state."""
-    
-    # Register the Ollama lifecycle hook
     manage_ollama_lifecycle()
-    
-    # Initialize the LLM orchestrator
     if "orchestrator" not in st.session_state:
         with st.spinner("Initializing Local Llama-3 and Vector Database... Please wait."):
             st.session_state.orchestrator = MarketSenseOrchestrator()
 
 def ingest_live_data(query: str):
-    """Scrapes live data and injects it into ChromaDB dynamically, resetting stale data."""
+    """Scrapes live data and injects it into ChromaDB dynamically."""
     Config.ensure_directories()
     
     scraper = TrendIngestionEngine()
@@ -98,10 +84,11 @@ def ingest_live_data(query: str):
     scraper.save_to_json(scraped_data, temp_filename)
     
     filepath = os.path.join(Config.RAW_DATA_DIR, temp_filename)
-    
-    # Pass reset=True to wipe old beverage/sunscreen vectors during live scraping
     db_manager.build_vector_store([filepath], reset=True)
     
+    # Re-instantiate orchestrator to ensure retriever binds to updated collection state
+    st.session_state.orchestrator = MarketSenseOrchestrator()
+
 def main():
     initialize_system()
 
@@ -127,7 +114,7 @@ def main():
     st.subheader("Market Research Query")
     query_input = st.text_input(
         "Enter a topic to analyze:",
-        value="What are the latest consumer complaints regarding sunscreen in India?"
+        value="What are consumer trends and feedback regarding Korean rice water toners in India?"
     )
 
     generate_button = st.button("Generate Product Strategy", type="primary")
