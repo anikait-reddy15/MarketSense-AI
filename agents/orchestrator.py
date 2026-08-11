@@ -9,6 +9,7 @@ if project_root not in sys.path:
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 
@@ -16,7 +17,6 @@ from utils.config import Config
 from utils.logger import setup_logger
 from agents.strategist import StrategistAgent
 
-# Initialize structured logger
 logger = setup_logger("MarketSenseOrchestrator")
 
 class MarketSenseOrchestrator:
@@ -47,18 +47,17 @@ class MarketSenseOrchestrator:
             search_kwargs={"k": Config.VECTOR_SEARCH_TOP_K}
         )
         
-        # Initialize modular sub-agent persona
         self.strategist_agent = StrategistAgent(llm=self.llm)
-        
         self.chain = self._build_pipeline()
 
     def _build_trend_analyzer_prompt(self):
-        """Defines the prompt for the Trend Analyzer agent."""
+        """Defines the prompt for the Trend Analyzer agent with explicit query constraints."""
         return ChatPromptTemplate.from_messages([
-            ("system", "You are an expert consumer intelligence analyst. "
-                       "Analyze the provided raw social signals and identify the top 3 emerging trends. "
-                       "Focus on ingredients, aesthetics, and consumer pain points."),
-            ("user", "Raw Data Context:\n{context}\n\nExtract the core trends.")
+            ("system", "You are an expert consumer intelligence analyst.\n"
+                       "Your task is to analyze raw social signals and extract emerging consumer trends.\n"
+                       "CRITICAL INSTRUCTION: Focus ONLY and STRICTLY on topics directly related to the target query: '{query}'.\n"
+                       "Ignore any context, products, beverages, or data points that are completely off-topic or unrelated to '{query}'."),
+            ("user", "Target Query: {query}\n\nRaw Data Context:\n{context}\n\nExtract core trends strictly relevant to '{query}'.")
         ])
 
     def _format_docs(self, docs):
@@ -66,17 +65,20 @@ class MarketSenseOrchestrator:
         return "\n\n".join(doc.page_content for doc in docs)
 
     def _build_pipeline(self):
-        """Chains vector retrieval, trend extraction, and modular strategy generation."""
+        """Chains vector retrieval, query-aware trend extraction, and strategy generation."""
         
-        # Step 1: Extract trends from vector retrieval
+        # Step 1: Pass both context AND user query to the Trend Analyzer
         analyze_trends = (
-            {"context": self.retriever | self._format_docs} 
+            {
+                "context": self.retriever | self._format_docs,
+                "query": RunnablePassthrough()
+            } 
             | self._build_trend_analyzer_prompt() 
             | self.llm 
             | self.output_parser
         )
 
-        # Step 2: Route trend summary through the modular StrategistAgent
+        # Step 2: Route filtered trend summary through StrategistAgent
         formulate_strategy = analyze_trends | self.strategist_agent.chain
 
         return formulate_strategy
@@ -95,7 +97,7 @@ class MarketSenseOrchestrator:
 
 if __name__ == "__main__":
     orchestrator = MarketSenseOrchestrator()
-    target_query = "What are the latest consumer complaints and trends regarding sunscreen in India?"
+    target_query = "What are consumer trends regarding Korean rice water toners in India?"
     
     final_strategy = orchestrator.run(query=target_query)
     
