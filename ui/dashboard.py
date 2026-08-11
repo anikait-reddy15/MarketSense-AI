@@ -4,9 +4,13 @@ import streamlit as st
 
 # Add the project root to the system path to allow importing backend modules
 project_root = os.path.dirname(os.path.dirname(__file__))
-sys.path.append(project_root)
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
 from agents.orchestrator import MarketSenseOrchestrator
+from ingestion.trend_scraper import TrendIngestionEngine
+from ingestion.data_pipeline import VectorDatabaseManager
+from utils.config import Config
 
 # Configure the Streamlit page layout
 st.set_page_config(
@@ -21,6 +25,28 @@ def initialize_system():
         with st.spinner("Initializing Local Llama-3 and Vector Database... Please wait."):
             st.session_state.orchestrator = MarketSenseOrchestrator()
 
+def ingest_live_data(query: str):
+    """Scrapes live data and injects it into ChromaDB dynamically."""
+    Config.ensure_directories()
+    
+    # Initialize the keyless scraper and vector manager
+    scraper = TrendIngestionEngine()
+    db_manager = VectorDatabaseManager(persist_directory=str(Config.VECTOR_STORE_DIR))
+    
+    # Step 1: Scrape the web for the user's specific query
+    scraped_data = scraper.fetch_web_trends(query, max_results=10)
+    
+    if not scraped_data:
+        raise ValueError("Failed to retrieve any live data for this topic.")
+        
+    # Step 2: Save temporarily to pass to the vector pipeline
+    temp_filename = "live_dashboard_scrape.json"
+    scraper.save_to_json(scraped_data, temp_filename)
+    
+    # Step 3: Embed into ChromaDB
+    filepath = os.path.join(Config.RAW_DATA_DIR, temp_filename)
+    db_manager.build_vector_store([filepath])
+    
 def main():
     # Load backend models on startup
     initialize_system()
@@ -34,7 +60,11 @@ def main():
         st.markdown("**[ACTIVE]** Vector Database Connected")
         st.markdown("**[ACTIVE]** Local Llama-3 Model Loaded")
         st.markdown("---")
-        st.write("This dashboard queries the local ChromaDB for ingested consumer trends and generates actionable product strategies.")
+        
+        # Add the toggle for On-Demand Ingestion
+        st.subheader("Data Strategy")
+        use_live_scrape = st.toggle("Enable Live Web Scraping", value=False)
+        st.caption("If enabled, the system will scrape the internet for fresh data before answering your query. If disabled, it searches existing database memory.")
 
     # Main Dashboard Area
     st.title("Central Consumer Intelligence Engine")
@@ -44,7 +74,7 @@ def main():
     st.subheader("Market Research Query")
     query_input = st.text_input(
         "Enter a topic to analyze:",
-        value="What are the latest consumer complaints and trends regarding sunscreen in India?"
+        value="What are the latest consumer complaints regarding sunscreen in India?"
     )
 
     generate_button = st.button("Generate Product Strategy", type="primary")
@@ -53,16 +83,20 @@ def main():
         st.markdown("---")
         st.subheader("AI Strategic Output")
         
-        with st.spinner("Querying vector store and generating strategies..."):
-            try:
-                # Execute the RAG pipeline using the session state orchestrator
+        try:
+            # Handle Live Scraping if the user toggled it on
+            if use_live_scrape:
+                with st.spinner("Scraping live internet data and embedding into ChromaDB..."):
+                    ingest_live_data(query_input)
+                    st.success("Successfully ingested fresh market data!")
+            
+            # Execute RAG strategy generation
+            with st.spinner("Querying vector store and generating strategy..."):
                 final_strategy = st.session_state.orchestrator.run(query=query_input)
-                
-                # Display the output directly on the dashboard
                 st.markdown(final_strategy)
-            except Exception as e:
-                # Using standard markdown to strictly prevent automatic emoji rendering
-                st.markdown(f"**[ERROR]** An error occurred during generation: {str(e)}")
+                
+        except Exception as e:
+            st.markdown(f"**[ERROR]** An error occurred: {str(e)}")
 
 if __name__ == "__main__":
     main()
