@@ -83,7 +83,7 @@ def initialize_system():
             st.session_state.orchestrator = MarketSenseOrchestrator()
 
 def ingest_live_data(query: str):
-    """Scrapes live data and injects it into ChromaDB dynamically."""
+    """Scrapes live data and injects it into ChromaDB dynamically, resetting stale data."""
     Config.ensure_directories()
     
     scraper = TrendIngestionEngine()
@@ -98,7 +98,9 @@ def ingest_live_data(query: str):
     scraper.save_to_json(scraped_data, temp_filename)
     
     filepath = os.path.join(Config.RAW_DATA_DIR, temp_filename)
-    db_manager.build_vector_store([filepath])
+    
+    # Pass reset=True to wipe old beverage/sunscreen vectors during live scraping
+    db_manager.build_vector_store([filepath], reset=True)
     
 def main():
     initialize_system()
