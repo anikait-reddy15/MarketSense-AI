@@ -30,6 +30,30 @@ class MarketSenseOrchestrator:
             model_name=Config.LLM_MODEL_NAME, 
             temperature=Config.LLM_TEMPERATURE
         )
+        self.output_parser = StrOutputParser()
+        
+        # RESTORED: Vector Store and Retriever Initialization
+        logger.info("Connecting to ChromaDB Vector Store...")
+        self.embedding_function = HuggingFaceEmbeddings(
+            model_name=Config.EMBEDDING_MODEL_NAME,
+            model_kwargs={'device': Config.EMBEDDING_DEVICE}
+        )
+        
+        self.vector_store = Chroma(
+            collection_name=Config.VECTOR_COLLECTION_NAME,
+            persist_directory=str(Config.VECTOR_STORE_DIR),
+            embedding_function=self.embedding_function
+        )
+        
+        self.retriever = self.vector_store.as_retriever(
+            search_kwargs={"k": Config.VECTOR_SEARCH_TOP_K}
+        )
+        
+        # RESTORED: Initialize modular sub-agent persona
+        self.strategist_agent = StrategistAgent(llm=self.llm)
+        
+        # RESTORED: Build the LCEL chain
+        self.chain = self._build_pipeline()
 
     def _build_trend_analyzer_prompt(self):
         """Defines the prompt for the Trend Analyzer agent with explicit query constraints."""
