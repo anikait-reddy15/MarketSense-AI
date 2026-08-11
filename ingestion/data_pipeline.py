@@ -8,8 +8,6 @@ class VectorDatabaseManager:
     def __init__(self, persist_directory: str):
         """Initializes the local embedding model and target database directory."""
         print("[INFO] Initializing HuggingFace Embeddings on CPU...")
-        
-        # FORCED CPU EXECUTION: Prevents PyTorch from locking GPU VRAM
         self.embedding_function = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-MiniLM-L6-v2",
             model_kwargs={'device': 'cpu'}
@@ -40,8 +38,22 @@ class VectorDatabaseManager:
             
         return documents
 
-    def build_vector_store(self, json_files: list[str], collection_name: str = "marketsense_trends"):
+    def build_vector_store(self, json_files: list[str], collection_name: str = "marketsense_trends", reset: bool = False):
         """Embeds documents and writes them to the local ChromaDB."""
+        
+        # Reset existing collection if requested to prevent topic contamination
+        if reset:
+            try:
+                print(f"[INFO] Resetting vector collection '{collection_name}' for fresh query...")
+                temp_chroma = Chroma(
+                    collection_name=collection_name,
+                    persist_directory=self.persist_directory,
+                    embedding_function=self.embedding_function
+                )
+                temp_chroma.delete_collection()
+            except Exception as e:
+                print(f"[WARNING] Could not reset collection: {str(e)}")
+
         all_docs = []
         for file in json_files:
             print(f"[INFO] Processing file: {file}")
@@ -62,16 +74,3 @@ class VectorDatabaseManager:
         )
         print(f"[SUCCESS] Vector store successfully built at {self.persist_directory}")
         return vector_store
-
-if __name__ == "__main__":
-    base_dir = os.path.dirname(os.path.dirname(__file__))
-    raw_data_dir = os.path.join(base_dir, "data", "raw")
-    vector_store_dir = os.path.join(base_dir, "data", "vector_store")
-    
-    files_to_process = [
-        os.path.join(raw_data_dir, "skincare_trends.json"),
-        os.path.join(raw_data_dir, "ingredient_trends.json")
-    ]
-    
-    manager = VectorDatabaseManager(persist_directory=vector_store_dir)
-    manager.build_vector_store(files_to_process)
