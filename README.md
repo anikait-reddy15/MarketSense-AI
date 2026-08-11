@@ -1,476 +1,224 @@
 # MarketSense AI
-An autonomous, multi-agent intelligence pipeline. It continuously ingests global social signals, ingredient trends, and consumer data (e.g., TikTok trends, Reddit reviews). It synthesizes this to proactively deliver localized, actionable product insights for Think9’s brands, converting static research into predictive strategy.
-
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
-[![LangChain](https://img.shields.io/badge/LangChain-LCEL-green)](https://www.langchain.com/)
-[![ChromaDB](https://img.shields.io/badge/Vector%20DB-ChromaDB-orange)](https://www.trychroma.com/)
-[![Ollama](https://img.shields.io/badge/LLM-Ollama-black)](https://ollama.com/)
-[![Streamlit](https://img.shields.io/badge/UI-Streamlit-red)](https://streamlit.io/)
 
 ## Overview
 
-### Definition
+**MarketSense AI** is a centralized, AI-native consumer intelligence pipeline designed to accelerate operational speed and product strategy generation across Think9's portfolio of consumer brands.
 
-**MarketSense AI** is a centralized, AI-native consumer intelligence engine designed for Think9's venture studio and brand portfolio.
+Instead of relying on static, manual market research, the system functions as an autonomous research layer. It programmatically ingests unstructured consumer signals such as search trends, forum complaints, and web discussions without relying on locked APIs. These signals are embedded into a localized vector database and processed through a Retrieval-Augmented Generation (RAG) framework that powers specialized AI agents.
 
-### Explanation
+Running on **Groq's high-speed cloud infrastructure**, these agents analyze raw consumer data and generate actionable product strategies specifically tailored for the Indian market.
 
-MarketSense AI ingests unstructured global consumer signals and transforms them into actionable, localized product strategies for the Indian market.
+### Examples of Capabilities
 
-Instead of depending on static market research and manually collected insights, MarketSense AI creates an automated research layer that collects consumer discussions, search trends, product complaints, and emerging market signals. These signals are embedded into a local vector database and retrieved through a Retrieval-Augmented Generation (RAG) pipeline.
-
-Specialized AI agents then analyze the retrieved information and generate insights that can support product development, positioning, marketing, and go-to-market decisions.
-
-### Examples
-
-**1. Consumer Pain Point Discovery**
-
-The system can collect discussions and complaints about skincare products, such as consumers reporting sticky textures or white casts from sunscreens in humid climates.
-
-These complaints can then be analyzed to identify formulation opportunities for products designed specifically for Indian consumers.
-
-**2. Ingredient Trend Detection**
-
-MarketSense AI can search for emerging ingredient trends such as Ashwagandha, Matcha, or other rapidly growing consumer interests and identify where these trends may represent potential product opportunities.
-
-**3. Go-To-Market Strategy**
-
-The system can combine consumer trends and pain points to generate potential influencer strategies, product positioning, retail hooks, and localized marketing concepts.
+1. **Trend Identification:** Aggregate web signals to identify rising ingredients such as Ashwagandha and Matcha before they reach mainstream Indian consumer segments.
+2. **Pain Point Analysis:** Analyze unstructured consumer complaints about existing products, such as sticky white casts in humid-weather sunscreens, to identify formulation opportunities.
+3. **Strategic Go-To-Market Formulation:** Generate influencer partnership strategies, positioning ideas, and retail hooks based on emerging consumer trends.
 
 ---
 
 ## Core Architecture
 
-MarketSense AI is designed as a modular pipeline that separates data collection, knowledge storage, intelligence, and user interaction.
+The system utilizes a modern, modular technology stack designed to scale across multiple brands while avoiding unnecessary local hardware requirements and external API dependencies.
 
-```text
-                    ┌──────────────────────────┐
-                    │     Consumer Signals     │
-                    │ Web Search / Discussions │
-                    └────────────┬─────────────┘
-                                 │
-                                 ▼
-                    ┌──────────────────────────┐
-                    │     Ingestion Layer       │
-                    │     DDGS / Scraping      │
-                    └────────────┬─────────────┘
-                                 │
-                                 ▼
-                    ┌──────────────────────────┐
-                    │     Vector Memory        │
-                    │  ChromaDB + Embeddings   │
-                    └────────────┬─────────────┘
-                                 │
-                                 ▼
-                    ┌──────────────────────────┐
-                    │   Intelligence Layer     │
-                    │ LangChain + RAG + Agents │
-                    │      + Local LLM         │
-                    └────────────┬─────────────┘
-                                 │
-                                 ▼
-                    ┌──────────────────────────┐
-                    │      User Interface      │
-                    │        Streamlit          │
-                    └──────────────────────────┘
+```mermaid
+graph TD
+    A[User Query] --> B[Streamlit UI]
+    B --> C{Live Scrape Toggle}
+    C -->|Enabled| D[DuckDuckGo Ingestion Engine]
+    D --> E[JSON Document Conversion]
+    E --> F[HuggingFace Embeddings CPU]
+    F --> G[(ChromaDB Vector Store)]
+    C -->|Disabled| G
+    G --> H[LangChain Orchestrator]
+    H --> I[Trend Analyzer Agent - Groq LLM]
+    I --> J[Brand Strategist Agent - Groq LLM]
+    J --> K[Final Product Strategy]
+    K --> B
 ```
 
-### Ingestion Layer
+### 1. Data Ingestion Layer
 
-The ingestion layer collects live consumer signals from the web.
+The ingestion layer uses the `ddgs` (DuckDuckGo Search) library to collect live consumer queries, search results, and relevant web discussions.
 
-The active ingestion engine uses the `ddgs` library to perform API-free DuckDuckGo searches and collect relevant search results and consumer discussions.
+This approach reduces dependence on paid APIs and platform-specific access restrictions while allowing the system to dynamically generate research signals.
 
-The system can be configured around specific categories, products, ingredients, and consumer pain points.
+### 2. Vector Memory
 
-```text
-Search Query
-     │
-     ▼
-DuckDuckGo Search
-     │
-     ▼
-Consumer Signals
-     │
-     ▼
-Structured JSON
-```
+MarketSense AI uses `ChromaDB` alongside HuggingFace's lightweight `all-MiniLM-L6-v2` embedding model.
 
-This approach reduces dependence on paid APIs and external platform-specific access limitations.
+The system clears stale collections during live scraping to prevent topic contamination between research queries. Embeddings are configured to run on the CPU, keeping the system compatible with a wider range of hosting environments.
 
+### 3. Agentic Intelligence
 
-### Vector Memory
+The intelligence layer is built using **LangChain Expression Language (LCEL)**.
 
-MarketSense AI uses **ChromaDB** as its local vector database.
+The orchestrator routes retrieved context through query-aware specialized agents such as the **Trend Analyzer** and **Brand Strategist**.
 
-Collected consumer signals are transformed into embeddings using HuggingFace's `all-MiniLM-L6-v2` model.
+LLM inference is powered by Groq using the `llama-3.3-70b-versatile` model, providing high-speed inference without requiring expensive local GPU infrastructure.
 
-```text
-Raw Consumer Data
-       │
-       ▼
-Text Processing
-       │
-       ▼
-Embedding Model
-       │
-       ▼
-Vector Representation
-       │
-       ▼
-ChromaDB
-```
+### 4. User Interface
 
-The vector database allows the intelligence layer to retrieve relevant historical information when answering a new market research query.
+A `Streamlit` dashboard provides the primary user interface.
 
-Embeddings can run on the CPU, reducing GPU memory usage and allowing the system to operate on resource-constrained development machines.
+The LangChain orchestrator is cached in Streamlit session state, allowing brand managers to trigger on-demand web research and strategy generation without interacting directly with the backend pipeline.
 
-### Intelligence Layer
+---
 
-The intelligence layer is built around LangChain Expression Language (LCEL) and Retrieval-Augmented Generation (RAG).
+## Technology Stack
 
-A modular agent architecture allows different agents to specialize in different types of market intelligence.
+| Component              | Technology                     | Strategic Purpose                                                  |
+| ---------------------- | ------------------------------ | ------------------------------------------------------------------ |
+| **Frontend UI**        | Streamlit                      | Rapid internal tooling deployment for non-technical brand managers |
+| **Ingestion Pipeline** | `ddgs`, BeautifulSoup4         | API-agnostic web research and data collection                      |
+| **Vector Database**    | ChromaDB (SQLite)              | Persistent local memory for similarity search                      |
+| **Embeddings**         | HuggingFace `all-MiniLM-L6-v2` | Lightweight text vectorization running on CPU                      |
+| **LLM Inference**      | Groq Cloud                     | High-speed Llama inference without local GPU requirements          |
+| **Orchestration**      | LangChain (LCEL)               | Modular pipeline construction and agent orchestration              |
 
-Example agents include:
+---
 
-* **Trend Analyzer**
-* **Consumer Pain Point Analyzer**
-* **Brand Strategist**
-* **Product Opportunity Analyst**
-* **Go-To-Market Strategist**
-
-The system uses a local **Llama 3** model through **Ollama** for inference.
-
-```text
-User Query
-     │
-     ▼
-Orchestrator
-     │
-     ▼
-Retriever
-     │
-     ▼
-Relevant Consumer Signals
-     │
-     ▼
-Specialized Agent
-     │
-     ▼
-Local Llama 3
-     │
-     ▼
-Actionable Market Insight
-```
-
-### User Interface
-
-The Streamlit dashboard provides an interactive interface for brand managers and market researchers.
-
-Users can query the collected market intelligence without directly interacting with the underlying ingestion layer, vector database, or agent pipeline.
-
-Example queries include:
-
-* **What are the biggest complaints about Indian sunscreens?**
-* **Which skincare ingredients are currently gaining consumer interest?**
-* **What product opportunities exist around Ashwagandha?**
-* **What positioning could differentiate a new sunscreen in India?**
-
-### Project Structure
+## Project Structure
 
 ```text
 marketsense_ai/
-│
 ├── data/
-│   ├── raw/
-│   │   └── # Temporarily stores scraped JSON datasets
-│   │
-│   ├── processed/
-│   │   └── # Processed analytical outputs
-│   │
-│   └── vector_store/
-│       └── # Local ChromaDB storage
-│
+│   ├── raw/                 # Temporarily stores scraped JSON datasets
+│   ├── processed/           # Processed analytical outputs
+│   └── vector_store/        # Local ChromaDB SQLite storage
 ├── ingestion/
-│   │
-│   ├── trend_scraper.py
-│   │   └── # API-free DuckDuckGo ingestion engine
-│   │
-│   └── data_pipeline.py
-│       └── # Embeds collected data into ChromaDB
-│
+│   ├── trend_scraper.py     # API-free DuckDuckGo ingestion engine
+│   └── data_pipeline.py     # Embedding and vector-store management
 ├── agents/
-│   ├── orchestrator.py
-│   │   └── # Main LCEL pipeline and retrieval logic
-│   │
-│   └── strategist.py
-│       └── # Brand Strategist agent
-│
+│   ├── orchestrator.py      # Main LCEL pipeline connecting Groq and ChromaDB
+│   └── strategist.py        # Brand Strategist agent
 ├── ui/
-│   └── dashboard.py
-│       └── # Streamlit interface
-│
+│   └── dashboard.py         # Streamlit web interface
 ├── utils/
-│   ├── config.py
-│   │   └── # Centralized configuration
-│   │
-│   └── logger.py
-│       └── # System logging
-│
-├── main.py
-│   └── # End-to-end execution entry point
-│
-├── requirements.txt
-└── README.md
-```
-
-## Installation & Setup
-
-### Prerequisites
-
-Make sure the following are installed:
-
-* Python 3.10 or higher
-* Ollama
-* Git
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/yourusername/marketsense_ai.git
-cd marketsense_ai
-```
-
-### 2. Create a Virtual Environment
-
-```bash
-python -m venv .venv
-```
-
-#### Windows
-
-```powershell
-.venv\Scripts\activate
-```
-
-#### macOS / Linux
-
-```bash
-source .venv/bin/activate
-```
-
-### 3. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-The `all-MiniLM-L6-v2` embedding model will be downloaded automatically during its first execution.
-
-### 4. Install and Start Ollama
-
-Install Ollama and download the required local LLM:
-
-```bash
-ollama run llama3
-```
-
-Verify that the model is available:
-
-```bash
-ollama list
-```
-
-## Usage
-
-### Option A: End-to-End Pipeline
-
-Run the complete pipeline:
-
-```bash
-python main.py
-```
-
-The pipeline performs the following operations:
-
-```text
-1. Collect consumer signals
-        ↓
-2. Process scraped data
-        ↓
-3. Generate embeddings
-        ↓
-4. Store vectors in ChromaDB
-        ↓
-5. Retrieve relevant market information
-        ↓
-6. Run the AI strategy pipeline
-        ↓
-7. Generate actionable insights
-```
-
-### Option B: Streamlit Dashboard
-
-Launch the interactive dashboard:
-
-```bash
-streamlit run ui/dashboard.py
-```
-
-The application will be available locally at:
-
-```text
-http://localhost:8501
+│   ├── config.py            # Centralized configuration parameters
+│   └── logger.py            # Standardized timestamped system logging
+├── main.py                  # End-to-end execution entry point
+├── requirements.txt         # Python dependencies
+└── README.md                # Project documentation
 ```
 
 ---
 
-## Example Workflow
+## Accessing the Dashboard
 
-A typical MarketSense AI workflow looks like this:
+The MarketSense AI dashboard is available through Streamlit Community Cloud:
 
-```text
-                     MarketSense AI
-                           │
-                           ▼
-                 Define Research Query
-                           │
-                           ▼
-              Search Consumer Discussions
-                           │
-                           ▼
-                Collect Market Signals
-                           │
-                           ▼
-                 Generate Embeddings
-                           │
-                           ▼
-                    Store in ChromaDB
-                           │
-                           ▼
-                    Retrieve Context
-                           │
-                           ▼
-                  Analyze with LLM
-                           │
-                           ▼
-                Generate Product Insight
+**[🔗 Launch MarketSense AI Dashboard](https://marketsense-ai-anikait.streamlit.app/)**
+
+> **Note:** If the application has been inactive for several days, it may take 1–2 minutes to start when accessed for the first time.
+
+---
+
+## Usage Example & Workflow
+
+### The Scenario
+
+A Think9 brand manager wants to explore launching a Korean-inspired skincare product tailored for the Indian climate.
+
+### The Execution Workflow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Streamlit_UI
+    participant Ingestion_Engine
+    participant ChromaDB
+    participant Groq_LLM
+
+    User->>Streamlit_UI: Enters "Korean rice water toners in India"
+    User->>Streamlit_UI: Toggles Live Web Scraping ON
+    User->>Streamlit_UI: Clicks Generate Strategy
+
+    Streamlit_UI->>Ingestion_Engine: Trigger live DuckDuckGo scrape
+    Ingestion_Engine-->>Streamlit_UI: Returns raw JSON snippets
+
+    Streamlit_UI->>ChromaDB: Clear stale data
+    Streamlit_UI->>ChromaDB: Embed new snippets via HuggingFace
+
+    Streamlit_UI->>Groq_LLM: Pass query + retrieved context
+    Groq_LLM-->>Streamlit_UI: Return strategic output
+
+    Streamlit_UI->>User: Render final product strategy
 ```
 
-For example:
+### The Output
 
-```text
-Input:
-"What are consumers complaining about
-when using sunscreen in India?"
+The system generates a focused strategy by extracting key insights from the collected consumer signals:
 
-                    ↓
+* **Formulation Adjustments:** Adding ingredients such as Niacinamide to address humidity-induced oiliness.
+* **Packaging:** Recommending mist-spray bottles for easier application in hot weather.
+* **Marketing Hooks:** Positioning the product as a "cooling, lightweight" alternative to heavier Western toners.
 
-Retrieved Signals:
-- White cast
-- Sticky texture
-- Excessive sweating
-- Eye irritation
-- High humidity performance
+---
 
-                    ↓
+## Design Goals
 
-AI Analysis:
-Identify recurring pain points and
-potential product opportunities.
+### 1. API Independence
 
-                    ↓
+By utilizing keyless web research, the system reduces vendor lock-in and exposure to arbitrary API pricing changes from external data providers.
 
-Output:
-Potential positioning around
-lightweight, sweat-resistant,
-zero-white-cast sunscreen.
-```
-## Implementation Roadmap
+### 2. Computational Efficiency
 
-MarketSense AI currently represents a functional MVP. The following 30-day roadmap focuses on transforming the prototype into a scalable internal consumer intelligence platform.
+Running embeddings on the CPU while using Groq for LLM inference allows the architecture to operate without requiring specialized local GPU infrastructure.
+
+### 3. Modularity
+
+The LCEL architecture allows the underlying LLM to be replaced or additional specialized agents to be introduced without requiring a complete rewrite of the pipeline.
+
+For example, additional agents such as a **Compliance Checker**, **Competitor Analyst**, or **Market Opportunity Analyst** can be integrated into the existing architecture.
+
+### 4. Data Isolation
+
+The `reset=True` behavior during live scraping prevents unrelated research queries from contaminating the vector memory, helping maintain high-fidelity retrieval for each research session.
+
+---
+
+## 30-Day Implementation Roadmap
+
+This repository represents the functional **Minimum Viable Product (MVP)**. The roadmap for integrating MarketSense AI into the Think9 enterprise ecosystem includes:
 
 ### Week 1 — Scale Data Ingestion
 
-* Expand the DDGS ingestion engine.
-* Add asynchronous ingestion jobs.
-* Support 50+ localized product categories.
-* Introduce scheduled data collection.
+* Scale the `ddgs` ingestion engine.
+* Introduce asynchronous scheduled jobs.
+* Expand coverage across 50+ localized product categories.
 * Improve query generation and deduplication.
 
-### Week 2 — Improve RAG and Intelligence
+### Week 2 — Refine RAG & Intelligence
 
 * Implement Maximal Marginal Relevance (MMR) retrieval.
-* Improve chunking and metadata filtering.
-* Add specialized consumer insight agents.
-* Introduce an FSSAI/AYUSH compliance analysis agent.
+* Improve metadata filtering and chunking.
+* Add an FSSAI/AYUSH Compliance Agent.
 * Improve agent orchestration and response consistency.
 
 ### Week 3 — Internal Deployment
 
-* Deploy the Streamlit application internally.
+* Deploy the Streamlit application internally on cloud infrastructure.
 * Add multi-brand selection.
 * Implement brand-specific knowledge bases.
-* Add Human-in-the-Loop feedback.
-* Store analyst feedback for improving future insights.
+* Introduce Human-in-the-Loop (HITL) feedback logging.
 
 ### Week 4 — Production Infrastructure
 
-* Containerize the application with Docker.
+* Containerize the architecture using Docker.
 * Separate ingestion, retrieval, and inference services.
-* Move LLM inference to scalable GPU infrastructure.
-* Implement scheduled production pipelines.
-* Add monitoring, logging, and system health checks.
+* Implement secure data partitioning.
+* Add monitoring, logging, and health checks.
 
-## Technology Stack
-
-| Layer               | Technology                     |
-| ------------------- | ------------------------------ |
-| Language            | Python                         |
-| Web Research        | DDGS / DuckDuckGo              |
-| Embeddings          | HuggingFace `all-MiniLM-L6-v2` |
-| Vector Database     | ChromaDB                       |
-| RAG / Orchestration | LangChain / LCEL               |
-| Local LLM           | Llama 3                        |
-| LLM Runtime         | Ollama                         |
-| Frontend            | Streamlit                      |
-| Data Format         | JSON                           |
-| Deployment          | Docker                         |
-| Target Market       | India                          |
-
-## Design Goals
-
-MarketSense AI is designed around four core principles:
-
-### 1. Automated Research
-
-Reduce the amount of manual research required to identify emerging consumer trends and recurring product problems.
-
-### 2. Localized Intelligence
-
-Transform global consumer signals into insights specifically relevant to Indian consumers, categories, and market conditions.
-
-### 3. Modular AI Architecture
-
-Keep ingestion, retrieval, agents, and the user interface modular so that individual components can be upgraded independently.
-
-### 4. Cost-Efficient AI
-
-Use local embeddings, local vector storage, and local LLM inference to minimize dependence on expensive external AI APIs during development and internal deployment.
+---
 
 ## Future Opportunities
 
 Potential extensions include:
 
-* Real-time trend monitoring
-* Automated competitor intelligence
-* Brand-specific RAG pipelines
-* Consumer sentiment tracking
-* Product concept generation
-* Market opportunity scoring
-* Automated influencer discovery
-* Retail trend analysis
-* Regulatory compliance analysis
-* Multi-agent product research
-* Automated executive reports
-* Scheduled market intelligence alerts
+* **Multimodal Analysis:** Integrate vision models to analyze social media aesthetics, packaging designs, and visual product trends.
+* **Automated Trend Alerts:** Notify brand managers when specific consumer keywords or pain points begin increasing in relevance.
+* **Competitor Benchmarking:** Create a dedicated agent to analyze competitor pricing, positioning, and consumer sentiment.
+* **Real-Time Consumer Intelligence:** Continuously monitor emerging consumer conversations across product categories.
+* **Automated Executive Reports:** Generate scheduled market intelligence summaries for decision-makers.
+* **Product Opportunity Scoring:** Rank potential product opportunities based on consumer demand, pain points, and competitive gaps.
+
