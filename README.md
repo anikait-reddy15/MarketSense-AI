@@ -1,8 +1,6 @@
 # MarketSense AI
 An autonomous, multi-agent intelligence pipeline. It continuously ingests global social signals, ingredient trends, and consumer data (e.g., TikTok trends, Reddit reviews). It synthesizes this to proactively deliver localized, actionable product insights for Think9’s brands, converting static research into predictive strategy.
 
-# MarketSense AI
-
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
 [![LangChain](https://img.shields.io/badge/LangChain-LCEL-green)](https://www.langchain.com/)
 [![ChromaDB](https://img.shields.io/badge/Vector%20DB-ChromaDB-orange)](https://www.trychroma.com/)
