@@ -41,18 +41,21 @@ class VectorDatabaseManager:
     def build_vector_store(self, json_files: list[str], collection_name: str = "marketsense_trends", reset: bool = False):
         """Embeds documents and writes them to the local ChromaDB."""
         
-        # Reset existing collection if requested to prevent topic contamination
+        # Reset existing collection contents without destroying the collection entity
         if reset:
             try:
-                print(f"[INFO] Resetting vector collection '{collection_name}' for fresh query...")
+                print(f"[INFO] Clearing existing documents in '{collection_name}'...")
                 temp_chroma = Chroma(
                     collection_name=collection_name,
                     persist_directory=self.persist_directory,
                     embedding_function=self.embedding_function
                 )
-                temp_chroma.delete_collection()
+                existing_ids = temp_chroma.get()['ids']
+                if existing_ids:
+                    temp_chroma.delete(ids=existing_ids)
+                    print(f"[INFO] Cleared {len(existing_ids)} stale documents.")
             except Exception as e:
-                print(f"[WARNING] Could not reset collection: {str(e)}")
+                print(f"[WARNING] Could not clear collection contents: {str(e)}")
 
         all_docs = []
         for file in json_files:
