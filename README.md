@@ -8,6 +8,12 @@ Instead of relying on static, manual market research, the system functions as an
 
 Running on **Groq's high-speed cloud infrastructure**, these agents analyze raw consumer data and generate actionable product strategies specifically tailored for the Indian market.
 
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
+[![LangChain](https://img.shields.io/badge/LangChain-LCEL-green)](https://www.langchain.com/)
+[![ChromaDB](https://img.shields.io/badge/Vector%20DB-ChromaDB-orange)](https://www.trychroma.com/)
+[![Ollama](https://img.shields.io/badge/LLM-Ollama-black)](https://ollama.com/)
+[![Streamlit](https://img.shields.io/badge/UI-Streamlit-red)](https://streamlit.io/)
+
 ### Examples of Capabilities
 
 1. **Trend Identification:** Aggregate web signals to identify rising ingredients such as Ashwagandha and Matcha before they reach mainstream Indian consumer segments.
