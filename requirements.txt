@@ -17,6 +17,7 @@ chromadb>=0.4.24
 langchain-chroma>=0.1.0
 langchain-huggingface>=0.0.1
 sentence-transformers>=2.5.1
+torchvision>=0.17.0
 
 # Environment & Utilities
 python-dotenv>=1.0.1
