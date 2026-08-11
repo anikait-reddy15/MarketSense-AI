@@ -62,10 +62,9 @@ def manage_ollama_lifecycle():
     ollama_process.terminate()
 
 def initialize_system():
-    """Initializes the background processes and orchestrator state."""
-    manage_ollama_lifecycle()
+    """Initializes the orchestrator state without managing local hardware."""
     if "orchestrator" not in st.session_state:
-        with st.spinner("Initializing Local Llama-3 and Vector Database... Please wait."):
+        with st.spinner("Connecting to Groq Cloud and initializing Vector Database..."):
             st.session_state.orchestrator = MarketSenseOrchestrator()
 
 def ingest_live_data(query: str):

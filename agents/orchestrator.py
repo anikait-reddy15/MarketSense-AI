@@ -6,7 +6,7 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-from langchain_ollama import ChatOllama
+from langchain_groq import ChatGroq 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
@@ -21,34 +21,15 @@ logger = setup_logger("MarketSenseOrchestrator")
 
 class MarketSenseOrchestrator:
     def __init__(self):
-        """Initializes the LLM, vector store retriever, logger, and sub-agents."""
         Config.ensure_directories()
         
-        logger.info(f"Initializing local LLM: {Config.LLM_MODEL_NAME} via Ollama...")
-        self.llm = ChatOllama(
-            model=Config.LLM_MODEL_NAME, 
+        # Initialize Groq Cloud LLM instead of local Ollama
+        logger.info(f"Initializing Cloud LLM: {Config.LLM_MODEL_NAME} via Groq...")
+        self.llm = ChatGroq(
+            groq_api_key=Config.GROQ_API_KEY,
+            model_name=Config.LLM_MODEL_NAME, 
             temperature=Config.LLM_TEMPERATURE
         )
-        self.output_parser = StrOutputParser()
-        
-        logger.info("Connecting to ChromaDB Vector Store...")
-        self.embedding_function = HuggingFaceEmbeddings(
-            model_name=Config.EMBEDDING_MODEL_NAME,
-            model_kwargs={'device': Config.EMBEDDING_DEVICE}
-        )
-        
-        self.vector_store = Chroma(
-            collection_name=Config.VECTOR_COLLECTION_NAME,
-            persist_directory=str(Config.VECTOR_STORE_DIR),
-            embedding_function=self.embedding_function
-        )
-        
-        self.retriever = self.vector_store.as_retriever(
-            search_kwargs={"k": Config.VECTOR_SEARCH_TOP_K}
-        )
-        
-        self.strategist_agent = StrategistAgent(llm=self.llm)
-        self.chain = self._build_pipeline()
 
     def _build_trend_analyzer_prompt(self):
         """Defines the prompt for the Trend Analyzer agent with explicit query constraints."""
